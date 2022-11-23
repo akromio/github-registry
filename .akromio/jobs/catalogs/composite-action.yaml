@@ -1,0 +1,54 @@
+spec: v1.0
+desc: Catalog for working with composite actions.
+
+dataset:
+  - const: src
+    desc: Dir where the source templates are.
+    value: $(__dir)/_$(__catalogName)
+    tags: [hidden]
+  
+  - const: dst
+    desc: Local directory where to save the files.
+    value: $(workDir)
+  
+  - const: createQ
+    desc: Questions for the creation of a composite action.
+    tags: [hidden, questions]
+    value:
+      - input: ownerName
+        title: GitHub owner/account name
+
+      - input: actionName
+        title: Action name
+
+      - input: actionDesc
+        title: Action desc
+
+      - input: authorName
+        title: Author name
+
+      - select: brandingIcon
+        title: Branding icon
+        options: [activity, archive, download, play, play-circle, plus-circle, share, upload]
+
+      - select: brandingColor
+        title: Branding color
+        options: [blue, gray-dark, green, orange, purple, red, white, yellow]
+  
+defaultJobName: create
+jobs:
+  - macro: create
+    title: Create composite action
+    ini:
+      - quiet: $answers = inquire $(createQ) $(answers)
+    local:
+      - var: item
+      - var: content
+    steps:
+      - quiet: $item = cr.getItem $(src)/action.yaml.hbs
+      - quiet: $content = hbs.render $(item.value) $(answers)
+      - file.write $(content) $(dst)/action.yaml
+
+      - quiet: $item = cr.getItem $(src)/README.md.hbs
+      - quiet: $content = hbs.render $(item.value) $(answers)
+      - file.write $(content) $(dst)/README.md

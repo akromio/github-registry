@@ -1,0 +1,20 @@
+name: {{actionName}}
+description: {{actionDesc}}
+author: {{authorName}}
+
+branding:
+  icon: {{brandingIcon}}
+  color: {{brandingColor}}
+
+# inputs:
+  # inputName:
+  #   description: the description
+  #   required: true
+  #   default: the default value
+
+runs:
+  using: composite
+  steps:
+    - name: hello
+      shell: bash
+      run: echo Hello world!

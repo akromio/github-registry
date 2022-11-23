@@ -1,0 +1,59 @@
+spec: v1.0
+desc: Catalog for working with the .github dir.
+
+dataset:
+  - const: src
+    desc: Dir where the source templates are.
+    value: $(__dir)/_$(__catalogName)
+    tags: [hidden]
+  
+  - const: dst
+    desc: Local directory where to save the files.
+    value: $(workDir)
+  
+  - const: codeownersQ
+    desc: Questions for the creation of the CODEOWNERS file.
+    tags: [hidden, questions]
+    value:
+      - input: ownerNames
+        title: Owner names (without @ and separated by whitespaces)
+  
+  - const: gitHookQ
+    desc: Questions for the creation of a Git hook.
+    tags: [hidden, questions]
+    value:
+      - input: gitHooksDirName
+        title: Dir where to save the Git hooks
+        defaultValue: .githooks
+      
+      - select: gitHookName
+        title: Git hook to create
+        options: [commit-msg]
+  
+jobs:
+  - macro: codeowners
+    title: Create the CODEOWNERS file
+    ini:
+      - quiet: $answers = inquire $(codeownersQ) $(answers)
+    local:
+      - var: item
+      - var: content
+    steps:
+      - fs.createDir $(dst)/.github
+
+      - quiet: $item = cr.getItem $(src)/CODEOWNERS.hbs
+      - quiet: $content = hbs.render $(item.value) $(answers)
+      - file.write $(content) $(dst)/.github/CODEOWNERS
+
+  - macro: gitHook
+    title: Create a Git hook
+    ini:
+      - quiet: $answers = inquire $(gitHookQ) $(answers)
+    local:
+      - var: item
+      - var: content
+    steps:
+      - fs.createDir $(answers.gitHooksDirName)
+      - cr.copy $(src)/githooks/$(answers.gitHookName) $(dst)/$(answers.gitHooksDirName)/$(answers.gitHookName)
+      - fs.chmod 775 $(dst)/$(answers.gitHooksDirName)/$(answers.gitHookName)
+      - [exec.log, git config --local core.hookspath $(answers.gitHooksDirName)]
