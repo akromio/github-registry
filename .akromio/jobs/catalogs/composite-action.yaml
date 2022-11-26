@@ -19,20 +19,13 @@ dataset:
         title: GitHub owner/account name
 
       - input: actionName
-        title: Action name
-
       - input: actionDesc
-        title: Action desc
-
       - input: authorName
-        title: Author name
 
       - select: brandingIcon
-        title: Branding icon
         options: [activity, archive, download, play, play-circle, plus-circle, share, upload]
 
       - select: brandingColor
-        title: Branding color
         options: [blue, gray-dark, green, orange, purple, red, white, yellow]
   
 defaultJobName: create
