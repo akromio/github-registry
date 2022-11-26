@@ -41,9 +41,7 @@ jobs:
     title: Create composite action
     ini:
       - quiet: $answers = inquire $(createQ) $(answers)
-    local:
-      - var: item
-      - var: content
+    local: [item, content]
     steps:
       - quiet: $item = cr.getItem $(src)/action.yaml.hbs
       - quiet: $content = hbs.render $(item.value) $(answers)
