@@ -1,0 +1,38 @@
+spec: v1.0
+desc: Catalog for working with GitHub Pages.
+
+dataset:
+  - const: src
+    desc: Dir where the source templates are.
+    value: $(__dir)/_$(__catalogName)
+    tags: [hidden]
+  
+  - const: dst
+    desc: Local directory where to save the files.
+    value: $(workDir)
+  
+  - const: createQ
+    desc: Questions for the creation of a GitHub Pages repository.
+    tags: [hidden, questions]
+    value:
+      - input: websiteTitle
+      - input: websiteDesc
+      - select: websiteDir
+        options: ["/", "/docs"]
+        defaultValue: "/docs"
+      - select: jekyllTheme
+        options: [jekyll-theme-minimal]
+  
+defaultJobName: create 
+jobs:
+  - macro: create
+    title: Create a GitHub Pages repository
+    ini:
+      - quiet: $answers = inquire $(createQ) $(answers)
+    local: [item, content]
+    steps:
+      - fs.createDir $(src)/$(answers.websiteDir)
+
+      - quiet: $item = cr.getItem $(src)/_config.yaml.hbs
+      - quiet: $content = hbs.render $(item,value) $(answers)
+      - file.write $(content) $(dst)/_config.yaml
