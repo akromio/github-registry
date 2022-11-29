@@ -53,6 +53,12 @@ dataset:
       - input: layout
       - input: permalink
   
+  - const: workflowQ
+    desc: Questions for generating a GitHub workflow
+    tags: [hidden, questions]
+    value:
+      - input: workflowName
+
 defaultJobName: jekyll
 jobs:
   - macro: jekyll
@@ -96,3 +102,15 @@ jobs:
     steps:
       - quiet: $item = cr.getItem $(src)/frontMatter.hbs
       - log: hbs.render $(item.value) $(answers)
+
+  - macro: workflow
+    title: Create a GitHub Actions workflow for publishing website on GitHub Pages
+    ini:
+      - quiet: $answers = inquire $(workflowQ) $(answers)
+    local: [item, content]
+    steps:
+      - fs.createDir $(dst)/.github/workflows
+
+      - quiet: $item = cr.getItem $(src)/workflows/workflow.yaml.hbs
+      - quiet: $content = hbs.render $(item.value) $(answers)
+      - file.write $(content) $(dst)/.github/workflows/github-pages.yaml
