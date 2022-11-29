@@ -45,6 +45,14 @@ dataset:
       - input: fileName
         title: File name (w/o extension)
   
+  - const: jekyllFrontMatterQ
+    desc: Questions for building a front matter.
+    tags: [hidden, questions]
+    value:
+      - input: title
+      - input: layout
+      - input: permalink
+  
 defaultJobName: jekyll
 jobs:
   - macro: jekyll
@@ -79,3 +87,12 @@ jobs:
       - quiet: $item = cr.getItem $(src)/_data/data-file.yaml.hbs
       - quiet: $content = hbs.render $(item.value) $(answers)
       - file.write $(content) $(dst)/_data/$(answers.fileName).yaml
+  
+  - macro: jekyll-front-matter
+    title: Build a Jekyll front matter
+    ini:
+      - quiet: $answers = inquire $(jekyllFrontMatterQ) $(answers)
+    local: [item, content]
+    steps:
+      - quiet: $item = cr.getItem $(src)/frontMatter.hbs
+      - log: hbs.render $(item.value) $(answers)
