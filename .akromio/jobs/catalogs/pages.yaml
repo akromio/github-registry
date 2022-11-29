@@ -11,24 +11,26 @@ dataset:
     desc: Local directory where to save the files.
     value: $(workDir)
   
-  - const: createQ
-    desc: Questions for the creation of a GitHub Pages repository.
+  - const: jekyllQ
+    desc: Questions for the creation of a Jekyll website.
     tags: [hidden, questions]
     value:
       - input: websiteTitle
       - input: websiteDesc
+      - input: websiteUrl
+      - input: websiteBase
       - select: websiteDir
         options: ["/", "/docs"]
         defaultValue: "/docs"
       - select: jekyllTheme
-        options: [jekyll-theme-minimal]
+        options: [jekyll-theme-minimal, minima, minimal-mistakes-jekyll]
   
-defaultJobName: create 
+defaultJobName: jekyll
 jobs:
-  - macro: create
-    title: Create a GitHub Pages repository
+  - macro: jekyll
+    title: Create a Jekyll website
     ini:
-      - quiet: $answers = inquire $(createQ) $(answers)
+      - quiet: $answers = inquire $(jekyllQ) $(answers)
     local: [item, content]
     steps:
       - fs.createDir $(src)/$(answers.websiteDir)
