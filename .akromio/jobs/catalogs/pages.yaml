@@ -19,11 +19,31 @@ dataset:
       - input: websiteDesc
       - input: websiteUrl
       - input: websiteBase
+        defaultValue: /
       - select: websiteDir
         options: ["/", "/docs"]
         defaultValue: "/docs"
       - select: jekyllTheme
         options: [jekyll-theme-minimal, minima, minimal-mistakes-jekyll]
+  
+  - const: jekyllConfigFileQ
+    desc: Questions for the creation of _config.yaml
+    tags: [hidden, questions]
+    value:
+      - input: websiteTitle
+      - input: websiteDesc
+      - input: websiteUrl
+      - input: websiteBase
+        defaultValue: /
+      - select: jekyllTheme
+        options: [jekyll-theme-minimal, minima, minimal-mistakes-jekyll]
+  
+  - const: jekyllDataFileQ
+    desc: Questions for the creation of a Jekyll data file.
+    tags: [hidden, questions]
+    value:
+      - input: fileName
+        title: File name (w/o extension)
   
 defaultJobName: jekyll
 jobs:
@@ -33,8 +53,29 @@ jobs:
       - quiet: $answers = inquire $(jekyllQ) $(answers)
     local: [item, content]
     steps:
-      - fs.createDir $(src)/$(answers.websiteDir)
-
+      - fs.createDir $(dst)/$(answers.websiteDir)
+      - fs.createDir $(dst)/_data
+      - fs.createDir $(dst)/_layouts
+      - jekyll-config-file
+  
+  - macro: jekyll-config-file
+    title: Create Jekyll configuration file
+    init:
+      - quiet: $answers = inquire $(jekyllConfigFileQ) $(answers)
+    local: [item, content]
+    steps:
       - quiet: $item = cr.getItem $(src)/_config.yaml.hbs
-      - quiet: $content = hbs.render $(item,value) $(answers)
+      - quiet: $content = hbs.render $(item.value) $(answers)
       - file.write $(content) $(dst)/_config.yaml
+
+  - macro: jekyll-data-file
+    title: Create Jekyll data file
+    ini:
+      - quiet: $answers = inquire $(jekyllDataFileQ) $(answers)
+    local: [item, content]
+    steps:
+      - fs.createDir $(dst)/_data
+
+      - quiet: $item = cr.getItem $(src)/_data/data-file.yaml.hbs
+      - quiet: $content = hbs.render $(item.value) $(answers)
+      - file.write $(content) $(dst)/_data/$(answers.fileName).yaml
