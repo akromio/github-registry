@@ -74,7 +74,7 @@ jobs:
   
   - macro: jekyll-config-file
     title: Create Jekyll configuration file
-    init:
+    ini:
       - quiet: $answers = inquire $(jekyllConfigFileQ) $(answers)
     local: [item, content]
     steps:
