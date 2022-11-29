@@ -1,0 +1,116 @@
+spec: v1.0
+desc: Catalog for working with GitHub Pages.
+
+dataset:
+  - const: src
+    desc: Dir where the source templates are.
+    value: $(__dir)/_$(__catalogName)
+    tags: [hidden]
+  
+  - const: dst
+    desc: Local directory where to save the files.
+    value: $(workDir)
+  
+  - const: jekyllQ
+    desc: Questions for the creation of a Jekyll website.
+    tags: [hidden, questions]
+    value:
+      - input: websiteTitle
+      - input: websiteDesc
+      - input: websiteUrl
+      - input: websiteBase
+        defaultValue: /
+      - select: websiteDir
+        options: ["/", "/docs"]
+        defaultValue: "/docs"
+      - select: jekyllTheme
+        options: [jekyll-theme-minimal, minima, minimal-mistakes-jekyll]
+  
+  - const: jekyllConfigFileQ
+    desc: Questions for the creation of _config.yaml
+    tags: [hidden, questions]
+    value:
+      - input: websiteTitle
+      - input: websiteDesc
+      - input: websiteUrl
+      - input: websiteBase
+        defaultValue: /
+      - select: jekyllTheme
+        options: [jekyll-theme-minimal, minima, minimal-mistakes-jekyll]
+  
+  - const: jekyllDataFileQ
+    desc: Questions for the creation of a Jekyll data file.
+    tags: [hidden, questions]
+    value:
+      - input: fileName
+        title: File name (w/o extension)
+  
+  - const: jekyllFrontMatterQ
+    desc: Questions for building a front matter.
+    tags: [hidden, questions]
+    value:
+      - input: title
+      - input: layout
+      - input: permalink
+  
+  - const: workflowQ
+    desc: Questions for generating a GitHub workflow
+    tags: [hidden, questions]
+    value:
+      - input: workflowName
+
+defaultJobName: jekyll
+jobs:
+  - macro: jekyll
+    title: Create a Jekyll website
+    ini:
+      - quiet: $answers = inquire $(jekyllQ) $(answers)
+    local: [item, content]
+    steps:
+      - fs.createDir $(dst)/$(answers.websiteDir)
+      - fs.createDir $(dst)/_data
+      - fs.createDir $(dst)/_layouts
+      - jekyll-config-file
+  
+  - macro: jekyll-config-file
+    title: Create Jekyll configuration file
+    init:
+      - quiet: $answers = inquire $(jekyllConfigFileQ) $(answers)
+    local: [item, content]
+    steps:
+      - quiet: $item = cr.getItem $(src)/_config.yaml.hbs
+      - quiet: $content = hbs.render $(item.value) $(answers)
+      - file.write $(content) $(dst)/_config.yaml
+
+  - macro: jekyll-data-file
+    title: Create Jekyll data file
+    ini:
+      - quiet: $answers = inquire $(jekyllDataFileQ) $(answers)
+    local: [item, content]
+    steps:
+      - fs.createDir $(dst)/_data
+
+      - quiet: $item = cr.getItem $(src)/_data/data-file.yaml.hbs
+      - quiet: $content = hbs.render $(item.value) $(answers)
+      - file.write $(content) $(dst)/_data/$(answers.fileName).yaml
+  
+  - macro: jekyll-front-matter
+    title: Build a Jekyll front matter
+    ini:
+      - quiet: $answers = inquire $(jekyllFrontMatterQ) $(answers)
+    local: [item, content]
+    steps:
+      - quiet: $item = cr.getItem $(src)/frontMatter.hbs
+      - log: hbs.render $(item.value) $(answers)
+
+  - macro: workflow
+    title: Create a GitHub Actions workflow for publishing website on GitHub Pages
+    ini:
+      - quiet: $answers = inquire $(workflowQ) $(answers)
+    local: [item, content]
+    steps:
+      - fs.createDir $(dst)/.github/workflows
+
+      - quiet: $item = cr.getItem $(src)/workflows/workflow.yaml.hbs
+      - quiet: $content = hbs.render $(item.value) $(answers)
+      - file.write $(content) $(dst)/.github/workflows/github-pages.yaml

@@ -1,0 +1,28 @@
+name: {{ workflowName }}
+on: workflow_dispatch
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v3
+
+      - name: Generate static website
+        shell: bash
+        run: |
+          # script for generating the website
+
+      - name: Generate and save GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: "."
+      
+      - name: Publish website on GitHub Pages
+        uses: actions/deploy-pages@v1
