@@ -1,0 +1,19 @@
+spec: v1.0
+desc: Catalog for working with Dependabot.
+
+dataset:
+  - const: src
+    desc: Dir where the source templates are.
+    value: $(__dir)/_$(__catalogName)
+    tags: [hidden]
+  
+  - const: dst
+    desc: Local directory where to save the files.
+    value: $(workDir)
+  
+jobs:
+  - macro: npm
+    title: Create the dependant.yaml file for npm ecosystem.
+    steps:
+      - fs.createDir $(dst)/.github
+      - cr.copy $(src)/npm-dependabot.yaml $(dst)/.github/dependabot.yaml
