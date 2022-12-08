@@ -1,0 +1,25 @@
+spec: v1.0
+desc: Catalog for working with GitHub Issues templates.
+
+dataset:
+  - const: src
+    desc: Dir where the source templates are.
+    value: $(__dir)/_$(__catalogName)
+    tags: [hidden]
+  
+  - const: dst
+    desc: Local directory where to save the files.
+    value: $(workDir)
+  
+jobs:
+  - macro: bug-report
+    desc: Create a bug report template
+    steps:
+      - fs.createDir $(dst)/.github/ISSUE_TEMPLATE
+      - cr.copy $(src)/bug-report.yaml $(dst)/.github/ISSUE_TEMPLATE/bug-report.yaml
+
+  - macro: feature-request
+    desc: Create a feature request template
+    steps:
+      - fs.createDir $(dst)/.github/ISSUE_TEMPLATE
+      - cr.copy $(src)/feature-request.yaml $(dst)/.github/ISSUE_TEMPLATE/feature-request.yaml
