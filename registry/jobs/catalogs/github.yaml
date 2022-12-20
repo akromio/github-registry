@@ -35,7 +35,7 @@ jobs:
     title: Create the CODEOWNERS file
     ini:
       - quiet: $answers = inquire $(codeownersQ) $(answers)
-    local: [item, content]
+    dataset: [item, content]
     steps:
       - fs.createDir $(dst)/.github
 
@@ -47,7 +47,7 @@ jobs:
     title: Create a Git hook
     ini:
       - quiet: $answers = inquire $(gitHookQ) $(answers)
-    local: [item, content]
+    dataset: [item, content]
     steps:
       - fs.createDir $(answers.gitHooksDirName)
       - cr.copy $(src)/githooks/$(answers.gitHookName) $(dst)/$(answers.gitHooksDirName)/$(answers.gitHookName)

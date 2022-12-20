@@ -65,7 +65,7 @@ jobs:
     title: Create a Jekyll website
     ini:
       - quiet: $answers = inquire $(jekyllQ) $(answers)
-    local: [item, content]
+    dataset: [item, content]
     steps:
       - fs.createDir $(dst)/$(answers.websiteDir)
       - fs.createDir $(dst)/_data
@@ -76,7 +76,7 @@ jobs:
     title: Create Jekyll configuration file
     ini:
       - quiet: $answers = inquire $(jekyllConfigFileQ) $(answers)
-    local: [item, content]
+    dataset: [item, content]
     steps:
       - quiet: $item = cr.getItem $(src)/_config.yaml.hbs
       - quiet: $content = hbs.render $(item.value) $(answers)
@@ -86,7 +86,7 @@ jobs:
     title: Create Jekyll data file
     ini:
       - quiet: $answers = inquire $(jekyllDataFileQ) $(answers)
-    local: [item, content]
+    dataset: [item, content]
     steps:
       - fs.createDir $(dst)/_data
 
@@ -98,7 +98,7 @@ jobs:
     title: Build a Jekyll front matter
     ini:
       - quiet: $answers = inquire $(jekyllFrontMatterQ) $(answers)
-    local: [item, content]
+    dataset: [item, content]
     steps:
       - quiet: $item = cr.getItem $(src)/frontMatter.hbs
       - log: hbs.render $(item.value) $(answers)
@@ -107,7 +107,7 @@ jobs:
     title: Create a GitHub Actions workflow for publishing website on GitHub Pages
     ini:
       - quiet: $answers = inquire $(workflowQ) $(answers)
-    local: [item, content]
+    dataset: [item, content]
     steps:
       - fs.createDir $(dst)/.github/workflows
 
