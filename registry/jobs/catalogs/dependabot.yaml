@@ -11,9 +11,23 @@ dataset:
     desc: Local directory where to save the files.
     value: $(workDir)
   
+  - const: npmQ
+    desc: Questions for the npm job.
+    tags: [hidden, questions]
+    value:
+      - select: versioningStrategy
+        options: [auto, increase, increase-if-necessary, lockfile-only, widen]
+        defaultValue: increase
+  
 jobs:
   - macro: npm
-    title: Create the dependant.yaml file for npm ecosystem.
+    title: Create the dependant.yaml file for npm ecosystem
+    ini:
+      - quiet: $answers = inquire $(npmQ) $(answers)
+    dataset: [item, content]
     steps:
       - fs.createDir $(dst)/.github
-      - cr.copy $(src)/npm-dependabot.yaml $(dst)/.github/dependabot.yaml
+
+      - quiet: $item = cr.getItem $(src)/npm-dependabot.yaml.hbs
+      - quiet: $content = hbs.render $(item.value) $(answers)
+      - file.write $(content) $(dst)/.github/dependabot.yaml
