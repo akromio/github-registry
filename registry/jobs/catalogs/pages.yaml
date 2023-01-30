@@ -106,6 +106,16 @@ dataset:
     value:
       - input: workflowName
 
+  - const: dockerQ
+    desc: Questions for returning a command line for running Jekyll w/ Docker.
+    tags: [hidden, questions]
+    value:
+      - input: container
+        defaultValue: jekyll
+      - select: image
+        options: [jekyll/jekyll:pages, jekyll/jekyll:latest]
+        defaultValue: jekyll/jekyll:pages
+
 defaultJobName: website
 jobs:
   - macro: website
@@ -196,3 +206,10 @@ jobs:
       - quiet: $item = cr.getItem $(src)/workflows/workflow.yaml.hbs
       - quiet: $content = hbs.render $(item.value) $(answers)
       - file.write $(content) $(dst)/.github/workflows/github-pages.yaml
+
+  - macro: docker
+    title: Return a command line for running Jekyll with Docker
+    ini:
+      - quiet: $answers = inquire $(dockerQ) $(answers)
+    steps:
+      - log sudo docker --name $(answers.container) -v $PWD:/srv/jekyll -p 4000:4000 -it --rm $(answers.image) bash -c 'bundle update && bundle exec jekyll clean && bundle exec jekyll s --host 0.0.0.0 --verbose'
