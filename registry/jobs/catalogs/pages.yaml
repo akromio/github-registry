@@ -61,10 +61,13 @@ dataset:
         options: [jekyll-feed, jekyll-sitemap]
         defaultValue: [jekyll-sitemap, jekyll-remote-theme]
   
-  - const: jekyllDataFileQ
-    desc: Questions for the creation of a Jekyll data file.
+  - const: dataQ
+    desc: Questions for the creation of a data file.
     tags: [hidden, questions]
     value:
+      - select: websiteDir
+        options: [/, /docs]
+        defaultValue: /
       - input: fileName
         title: File name (w/o extension)
   
@@ -126,17 +129,17 @@ jobs:
       - quiet: $content = hbs.render $(item.value) $(answers)
       - file.write $(content) $(dst)$(answers.websiteDir)/Gemfile
 
-  - macro: jekyll-data-file
-    title: Create Jekyll data file
+  - macro: data
+    title: Create a data file
     ini:
-      - quiet: $answers = inquire $(jekyllDataFileQ) $(answers)
+      - quiet: $answers = inquire $(dataQ) $(answers)
     dataset: [item, content]
     steps:
-      - fs.createDir $(dst)/_data
+      - fs.createDir $(dst)/$(answers.websiteDir)/_data
 
-      - quiet: $item = cr.getItem $(src)/_data/data-file.yaml.hbs
+      - quiet: $item = cr.getItem $(src)/_data/file.yaml.hbs
       - quiet: $content = hbs.render $(item.value) $(answers)
-      - file.write $(content) $(dst)/_data/$(answers.fileName).yaml
+      - file.write $(content) $(dst)/$(answers.websiteDir)/_data/$(answers.fileName).yaml
   
   - macro: front-matter
     title: Build a page front matter
