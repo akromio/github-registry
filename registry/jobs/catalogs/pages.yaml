@@ -11,7 +11,7 @@ dataset:
     desc: Local directory where to save the files.
     value: $(workDir)
   
-  - const: jekyllQ
+  - const: websiteQ
     desc: Questions for the creation of a Jekyll website.
     tags: [hidden, questions]
     value:
@@ -23,9 +23,15 @@ dataset:
       - input: websiteUrl
       - input: websiteBase
         defaultValue: /
-      - select: jekyllTheme
-        options: [leap-day, minima]
-        defaultValue: minima
+      - select: theme
+        options: [jekyll/minima, pages-theme/leap-day]
+        defaultValue: jekyll/minima
+      - select: plugins
+        multiple: true
+        options: [jekyll-feed, jekyll-sitemap]
+        defaultValue: [jekyll-sitemap]
+      - confirm: gemfile
+        defaultValue: true
   
   - const: configQ
     desc: Questions for the creation of _config.yaml
@@ -45,7 +51,7 @@ dataset:
       - select: plugins
         multiple: true
         options: [jekyll-feed, jekyll-sitemap]
-        defaultValue: [jekyll-sitemap, jekyll-remote-theme]
+        defaultValue: [jekyll-sitemap]
       - confirm: gemfile
         defaultValue: true
   
@@ -100,18 +106,21 @@ dataset:
     value:
       - input: workflowName
 
-defaultJobName: jekyll
+defaultJobName: website
 jobs:
-  - macro: jekyll
-    title: Create a Jekyll website
+  - macro: website
+    title: Create the scaffold for a Jekyll website
     ini:
-      - quiet: $answers = inquire $(jekyllQ) $(answers)
+      - quiet: $answers = inquire $(websiteQ) $(answers)
     dataset: [item, content]
     steps:
       - fs.createDir $(dst)/$(answers.websiteDir)
-      - fs.createDir $(dst)/_data
-      - fs.createDir $(dst)/_layouts
-      - jekyll-config-file
+      - fs.createDir $(dst)/$(answers.websiteDir)/_data
+      - fs.createDir $(dst)/$(answers.websiteDir)/_includes
+      - cr.copy $(src)/_gitignore $(dst)/$(answers.websiteDir)/.gitignore
+      - config
+      - if: answers.gemfile
+        step: gemfile
   
   - macro: config
     title: Create the _config.yaml file
