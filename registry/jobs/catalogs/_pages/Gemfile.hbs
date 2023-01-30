@@ -1,0 +1,17 @@
+source "https://rubygems.org"
+
+# Jekyll
+gem "jekyll"
+gem "minima"  # default theme
+gem "kramdown-parser-gfm"
+
+# Local webserver
+gem "webrick"
+
+# Plugins
+group :jekyll_plugins do
+  gem "jekyll-remote-theme"
+  {{#each plugins}}
+  gem "{{this}}"
+  {{/each}}
+end

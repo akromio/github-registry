@@ -1,5 +1,22 @@
-theme: {{jekyllTheme}}
 title: {{websiteTitle}}
 description: {{websiteDesc}}
 url: {{websiteUrl}}
 baseurl: {{websiteBase}}
+# google_analytics: G-XXXXXXXXXXXX
+
+plugins:
+  - jekyll-remote-theme
+  {{#each plugins}}
+  - {{this}}
+  {{/each}}
+
+remote_theme: {{theme}}
+{{#if (eq theme "jekyll/minima")}}
+minima:
+  skin: auto
+  # social_links:
+  #   - platform: github
+  #     user_url: https://github.com/OWNER
+  #   - platform: twitter
+  #     user_url: https://twitter.com/NAME
+{{/if}}
