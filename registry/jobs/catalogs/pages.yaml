@@ -49,6 +49,18 @@ dataset:
       - confirm: gemfile
         defaultValue: true
   
+  - const: gemfileQ
+    desc: Questions for the creation of Gemfile
+    tags: [hidden, questions]
+    value:
+      - select: websiteDir
+        options: [/, /docs]
+        defaultValue: /
+      - select: plugins
+        multiple: true
+        options: [jekyll-feed, jekyll-sitemap]
+        defaultValue: [jekyll-sitemap, jekyll-remote-theme]
+  
   - const: jekyllDataFileQ
     desc: Questions for the creation of a Jekyll data file.
     tags: [hidden, questions]
@@ -100,6 +112,18 @@ jobs:
         quiet: $content = hbs.render $(item.value) $(answers)
       - if: answers.gemfile
         step: file.write $(content) $(dst)/$(answers.websiteDir)/Gemfile
+  
+  - macro: gemfile
+    title: Create the Gemfile file
+    ini:
+      - quiet: $answers = inquire $(gemfileQ) $(answers)
+    dataset: [item, content]
+    steps:
+      - fs.createDir $(dst)/$(answers.websiteDir)
+
+      - quiet: $item = cr.getItem $(src)/Gemfile.hbs
+      - quiet: $content = hbs.render $(item.value) $(answers)
+      - file.write $(content) $(dst)$(answers.websiteDir)/Gemfile
 
   - macro: jekyll-data-file
     title: Create Jekyll data file
