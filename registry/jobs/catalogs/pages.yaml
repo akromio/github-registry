@@ -80,6 +80,20 @@ dataset:
         defaultValue: default
       - input: permalink
   
+  - const: pageQ
+    desc: Questions for building a content page.
+    tags: [hidden, questions]
+    value:
+      - select: websiteDir
+        options: [/, /docs]
+        defaultValue: /
+      - input: pageDir
+      - input: fileName
+      - input: title
+      - input: layout
+        defaultValue: page
+      - input: permalink
+
   - const: workflowQ
     desc: Questions for generating a GitHub workflow
     tags: [hidden, questions]
@@ -149,6 +163,18 @@ jobs:
     steps:
       - quiet: $item = cr.getItem $(src)/frontMatter.hbs
       - log: hbs.render $(item.value) $(answers)
+
+  - macro: page
+    title: Create a content page
+    ini:
+      - quiet: $answers = inquire $(pageQ) $(answers)
+    dataset: [item, content]
+    steps:
+      - fs.createDir $(dst)/$(answers.websiteDir)/$(answers.pageDir)
+
+      - quiet: $item = cr.getItem $(src)/page.hbs
+      - quiet: $content = hbs.render $(item.value) $(answers)
+      - file.write $(content) $(dst)/$(answers.websiteDir)/$(answers.pageDir)/$(answers.fileName)
 
   - macro: workflow
     title: Create a GitHub Actions workflow for publishing website on GitHub Pages
