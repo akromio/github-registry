@@ -11,97 +11,191 @@ dataset:
     desc: Local directory where to save the files.
     value: $(workDir)
   
-  - const: jekyllQ
+  - const: websiteDir
+    desc: Common question for getting the site dir.
+    tags: [hidden]
+    value:
+      select: websiteDir
+      options: [/, /docs]
+      defaultValue: /
+  
+  - const: theme
+    desc: Common question for getting the theme.
+    tags: [hidden]
+    value:
+      select: theme
+      options: [jekyll/minima, pages-theme/leap-day]
+      defaultValue: jekyll/minima
+  
+  - const: plugins
+    desc: Common question for getting the plugins.
+    tags: [hidden]
+    value:
+      select: plugins
+      multiple: true
+      options: [jekyll-feed, jekyll-sitemap]
+      defaultValue: [jekyll-sitemap]
+  
+  - const: websiteQ
     desc: Questions for the creation of a Jekyll website.
     tags: [hidden, questions]
     value:
+      - $(websiteDir)
       - input: websiteTitle
       - input: websiteDesc
       - input: websiteUrl
       - input: websiteBase
         defaultValue: /
-      - select: websiteDir
-        options: ["/", "/docs"]
-        defaultValue: "/docs"
-      - select: jekyllTheme
-        options: [jekyll-theme-minimal, minima, minimal-mistakes-jekyll]
+      - $(theme)
+      - $(plugins)
+      - confirm: gemfile
+        defaultValue: true
   
-  - const: jekyllConfigFileQ
+  - const: configQ
     desc: Questions for the creation of _config.yaml
     tags: [hidden, questions]
     value:
+      - $(websiteDir)
       - input: websiteTitle
       - input: websiteDesc
       - input: websiteUrl
       - input: websiteBase
         defaultValue: /
-      - select: jekyllTheme
-        options: [jekyll-theme-minimal, minima, minimal-mistakes-jekyll]
+      - $(theme)
+      - $(plugins)
+      - confirm: gemfile
+        defaultValue: true
   
-  - const: jekyllDataFileQ
-    desc: Questions for the creation of a Jekyll data file.
+  - const: gemfileQ
+    desc: Questions for the creation of Gemfile
     tags: [hidden, questions]
     value:
+      - $(websiteDir)
+      - $(plugins)
+  
+  - const: dataQ
+    desc: Questions for the creation of a data file.
+    tags: [hidden, questions]
+    value:
+      - $(websiteDir)
       - input: fileName
         title: File name (w/o extension)
   
-  - const: jekyllFrontMatterQ
+  - const: frontMatterQ
     desc: Questions for building a front matter.
     tags: [hidden, questions]
     value:
       - input: title
       - input: layout
+        defaultValue: default
       - input: permalink
   
+  - const: pageQ
+    desc: Questions for building a content page.
+    tags: [hidden, questions]
+    value:
+      - $(websiteDir)
+      - input: pageDir
+      - input: fileName
+      - input: title
+      - input: layout
+        defaultValue: page
+      - input: permalink
+
   - const: workflowQ
     desc: Questions for generating a GitHub workflow
     tags: [hidden, questions]
     value:
       - input: workflowName
 
-defaultJobName: jekyll
+  - const: dockerQ
+    desc: Questions for returning a command line for running Jekyll w/ Docker.
+    tags: [hidden, questions]
+    value:
+      - input: container
+        defaultValue: jekyll
+      - select: image
+        options: [jekyll/jekyll:pages, jekyll/jekyll:latest]
+        defaultValue: jekyll/jekyll:pages
+
+defaultJobName: website
 jobs:
-  - macro: jekyll
-    title: Create a Jekyll website
+  - macro: website
+    title: Create the scaffold for a Jekyll website
     ini:
-      - quiet: $answers = inquire $(jekyllQ) $(answers)
+      - quiet: $answers = inquire $(websiteQ) $(answers)
     dataset: [item, content]
     steps:
       - fs.createDir $(dst)/$(answers.websiteDir)
-      - fs.createDir $(dst)/_data
-      - fs.createDir $(dst)/_layouts
-      - jekyll-config-file
+      - fs.createDir $(dst)/$(answers.websiteDir)/_data
+      - fs.createDir $(dst)/$(answers.websiteDir)/_includes
+      - cr.copy $(src)/_gitignore $(dst)/$(answers.websiteDir)/.gitignore
+      - config
+      - if: answers.gemfile
+        step: gemfile
   
-  - macro: jekyll-config-file
-    title: Create Jekyll configuration file
+  - macro: config
+    title: Create the _config.yaml file
     ini:
-      - quiet: $answers = inquire $(jekyllConfigFileQ) $(answers)
+      - quiet: $answers = inquire $(configQ) $(answers)
     dataset: [item, content]
     steps:
       - quiet: $item = cr.getItem $(src)/_config.yaml.hbs
       - quiet: $content = hbs.render $(item.value) $(answers)
-      - file.write $(content) $(dst)/_config.yaml
+      - fs.createDir $(dst)/$(answers.websiteDir)
+      - file.write $(content) $(dst)/$(answers.websiteDir)/_config.yaml
 
-  - macro: jekyll-data-file
-    title: Create Jekyll data file
+      - if: answers.gemfile
+        quiet: $item = cr.getItem $(src)/Gemfile.hbs
+      - if: answers.gemfile
+        quiet: $content = hbs.render $(item.value) $(answers)
+      - if: answers.gemfile
+        step: file.write $(content) $(dst)/$(answers.websiteDir)/Gemfile
+  
+  - macro: gemfile
+    title: Create the Gemfile file
     ini:
-      - quiet: $answers = inquire $(jekyllDataFileQ) $(answers)
+      - quiet: $answers = inquire $(gemfileQ) $(answers)
     dataset: [item, content]
     steps:
-      - fs.createDir $(dst)/_data
+      - fs.createDir $(dst)/$(answers.websiteDir)
 
-      - quiet: $item = cr.getItem $(src)/_data/data-file.yaml.hbs
+      - quiet: $item = cr.getItem $(src)/Gemfile.hbs
       - quiet: $content = hbs.render $(item.value) $(answers)
-      - file.write $(content) $(dst)/_data/$(answers.fileName).yaml
-  
-  - macro: jekyll-front-matter
-    title: Build a Jekyll front matter
+      - file.write $(content) $(dst)$(answers.websiteDir)/Gemfile
+
+  - macro: data
+    title: Create a data file
     ini:
-      - quiet: $answers = inquire $(jekyllFrontMatterQ) $(answers)
+      - quiet: $answers = inquire $(dataQ) $(answers)
+    dataset: [item, content]
+    steps:
+      - fs.createDir $(dst)/$(answers.websiteDir)/_data
+
+      - quiet: $item = cr.getItem $(src)/_data/file.yaml.hbs
+      - quiet: $content = hbs.render $(item.value) $(answers)
+      - file.write $(content) $(dst)/$(answers.websiteDir)/_data/$(answers.fileName).yaml
+  
+  - macro: front-matter
+    title: Build a page front matter
+    ini:
+      - quiet: $answers = inquire $(frontMatterQ) $(answers)
     dataset: [item, content]
     steps:
       - quiet: $item = cr.getItem $(src)/frontMatter.hbs
       - log: hbs.render $(item.value) $(answers)
+
+  - macro: page
+    title: Create a content page
+    ini:
+      - quiet: $answers = inquire $(pageQ) $(answers)
+    dataset: [item, content]
+    steps:
+      - fs.createDir $(dst)/$(answers.websiteDir)/$(answers.pageDir)
+
+      - quiet: $item = cr.getItem $(src)/page.hbs
+      - quiet: $content = hbs.render $(item.value) $(answers)
+      - file.write $(content) $(dst)/$(answers.websiteDir)/$(answers.pageDir)/$(answers.fileName)
 
   - macro: workflow
     title: Create a GitHub Actions workflow for publishing website on GitHub Pages
@@ -114,3 +208,10 @@ jobs:
       - quiet: $item = cr.getItem $(src)/workflows/workflow.yaml.hbs
       - quiet: $content = hbs.render $(item.value) $(answers)
       - file.write $(content) $(dst)/.github/workflows/github-pages.yaml
+
+  - macro: docker
+    title: Return a command line for running Jekyll with Docker
+    ini:
+      - quiet: $answers = inquire $(dockerQ) $(answers)
+    steps:
+      - log sudo docker --name $(answers.container) -v $PWD:/srv/jekyll -p 4000:4000 -it --rm $(answers.image) bash -c 'bundle update && bundle exec jekyll clean && bundle exec jekyll s --host 0.0.0.0 --verbose'
