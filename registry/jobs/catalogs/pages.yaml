@@ -81,6 +81,12 @@ dataset:
       - input: fileName
         title: File name (w/o extension)
   
+  - const: minimaStyleQ
+    desc: Questions for the creation of the SCSS file when minima used.
+    tags: [hidden, questions]
+    value:
+      - $(websiteDir)
+  
   - const: frontMatterQ
     desc: Questions for building a front matter.
     tags: [hidden, questions]
@@ -134,6 +140,8 @@ jobs:
       - config
       - if: answers.gemfile
         step: gemfile
+      - if: answers.theme == "jekyll/minima"
+        step: minima-style
   
   - macro: config
     title: Create the _config.yaml file
@@ -177,6 +185,14 @@ jobs:
       - quiet: $content = hbs.render $(item.value) $(answers)
       - file.write $(content) $(dst)/$(answers.websiteDir)/_data/$(answers.fileName).yaml
   
+  - macro: minima-style
+    title: Create the SCSS file for overriding this default
+    ini:
+      - quiet: $answers = inquire $(minimaStyleQ) $(answers)
+    steps:
+      - fs.createDir $(dst)/$(answers.websiteDir)/assets/css
+      - cr.copy $(src)/assets/css/style.scss $(dst)/$(answers.websiteDir)/assets/css/style.scss
+
   - macro: front-matter
     title: Build a page front matter
     ini:
