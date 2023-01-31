@@ -215,4 +215,4 @@ jobs:
     ini:
       - quiet: $answers = inquire $(dockerQ) $(answers)
     steps:
-      - log sudo docker --name $(answers.container) -v $PWD:/srv/jekyll -p 4000:4000 -it --rm $(answers.image) bash -c 'bundle update && bundle exec jekyll clean && bundle exec jekyll s --host 0.0.0.0 --verbose'
+      - log sudo docker run --name $(answers.container) -v $PWD:/srv/jekyll -p 4000:4000 -it --rm $(answers.image) bash -c 'bundle update && bundle exec jekyll clean && bundle exec jekyll s --host 0.0.0.0 --verbose'
