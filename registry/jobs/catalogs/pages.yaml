@@ -129,6 +129,7 @@ jobs:
       - fs.createDir $(dst)/$(answers.websiteDir)
       - fs.createDir $(dst)/$(answers.websiteDir)/_data
       - fs.createDir $(dst)/$(answers.websiteDir)/_includes
+      - fs.createDir $(dst)/$(answers.websiteDir)/_layouts
       - cr.copy $(src)/_gitignore $(dst)/$(answers.websiteDir)/.gitignore
       - config
       - if: answers.gemfile
